@@ -1,0 +1,17 @@
+{
+    "name": "er",
+    "version": "0.8",
+    "contributors": [
+        {
+            "name": "otakustay",
+            "email": "otakustay@gmail.com"
+        }
+    ],
+    "dependencies": {
+        "er": ">=3.0"
+    },
+    "main": "main",
+    "description": "用于ER的页面访问统计套件",
+    "homepage": "https://github.com/ecomfe/er-track",
+    "repository": "git://github.com/ecomfe/er-track"
+}
