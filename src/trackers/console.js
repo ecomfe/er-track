@@ -7,9 +7,7 @@
  */
 define(
     function (require) {
-        var group = '';
-
-        function log(message) {
+        function log(group, message) {
             if (window.console) {
                 if (group && console.group) {
                     console.group(group);
@@ -23,27 +21,29 @@ define(
             }
         }
 
-        return {
-            name: 'console',
-            
-            initialize: function (options) {
-                group = options.account;
-            },
+        var exports = { name: 'console' };
 
-            trackPageView: function (context) {
-                var message = 'Forward to "' + context.url + '"';
-                if (context.referrer) {
-                    message += ' from "' + context.referrer + '"';
+        exports.create = function (config) {
+            return {
+                name: 'console',
+
+                trackPageView: function (context) {
+                    var message = 'Forward to "' + context.url + '"';
+                    if (context.referrer) {
+                        message += ' from "' + context.referrer + '"';
+                    }
+
+                    log(config.account || config.group, message);
+
+                    return this;
+                },
+
+                load: function (callback) {
+                    callback();
                 }
-
-                log(message);
-
-                return this;
-            },
-
-            load: function (callback) {
-                callback();
-            }
+            };
         };
+
+        return exports;
     }
 );

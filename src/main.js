@@ -9,20 +9,9 @@ define(
     function (require) {
         var exports = {};
 
-        var config = {
+        var globalConfig = {
             packageName: 'er-track'
         };
-
-        var trackers = {};
-
-        function each(method, args) {
-            for (var name in trackers) {
-                if (trackers.hasOwnProperty(name)) {
-                    var tracker = trackers[name];
-                    tracker[method] && tracker[method].apply(tracker, args);
-                }
-            }
-        }
 
         /**
          * 设置配置
@@ -31,104 +20,139 @@ define(
          * @param {Mixed} value 配置项值
          */
         exports.config = function (name, value) {
-            config[name] = value;
+            globalConfig[name] = value;
             return this;
         };
 
-        /**
-         * 启用指定追踪器
-         *
-         * @param {string} name 追踪器名称
-         * @return {Object}
-         */
-        exports.use = function (name) {
-            if (trackers[name]) {
-                return trackers[name];
+        exports.create = function () {
+            var config = {};
+
+            function getConfig(name) {
+                return config[name] || globalConfig[name] || null;
             }
 
-            var proxy = {
-                name: name,
+            var trackers = {};
 
-                configuration: {},
-
-                config: function (name, value) {
-                    this.configuration[name] = value;
-                    return this;
-                },
-
-                setAccount: function (account) {
-                    return this.config('account', account);
+            function each(method, args) {
+                for (var name in trackers) {
+                    if (trackers.hasOwnProperty(name)) {
+                        var tracker = trackers[name];
+                        tracker[method] && tracker[method].apply(tracker, args);
+                    }
                 }
+            }
+
+            var instance = {};
+
+            /**
+             * 设置配置
+             *
+             * @param {string} name 配置项名称
+             * @param {Mixed} value 配置项值
+             */
+            instance.config = function (name, value) {
+                config[name] = value;
+                return this;
             };
 
-            trackers[name] = proxy;
+            /**
+             * 启用指定追踪器
+             *
+             * @param {string} name 追踪器名称
+             * @return {Object}
+             */
+            instance.use = function (name) {
+                if (trackers[name]) {
+                    return trackers[name];
+                }
 
-            return proxy;
-        };
+                var proxy = {
+                    name: name,
 
-        var pendingCommands = [];
+                    configuration: {},
 
-        function flushPendingCommands() {
-            for (var i = 0; i < pendingCommands.length; i++) {
-                var method = pendingCommands[i][0];
-                var args = pendingCommands[i][1];
+                    config: function (name, value) {
+                        this.configuration[name] = value;
+                        return this;
+                    },
 
-                each(method, args);
-            }
-        }
+                    setAccount: function (account) {
+                        return this.config('account', account);
+                    }
+                };
 
-        /**
-         * 启用追踪
-         */
-        exports.start = function () {
-            var dependencies = [];
-            for (var name in trackers) {
-                if (trackers.hasOwnProperty(name)) {
-                    var moduleName = config.packageName + '/trackers/' + name;
-                    dependencies.push(moduleName);
+                trackers[name] = proxy;
+
+                return proxy;
+            };
+
+            var pendingCommands = [];
+
+            function flushPendingCommands() {
+                for (var i = 0; i < pendingCommands.length; i++) {
+                    var method = pendingCommands[i][0];
+                    var args = pendingCommands[i][1];
+
+                    each(method, args);
                 }
             }
 
-            window.require(
-                dependencies,
-                function () {
-                    var pendingUnits = arguments.length;
+            /**
+             * 启用追踪
+             */
+            instance.start = function () {
+                var dependencies = [];
+                for (var name in trackers) {
+                    if (trackers.hasOwnProperty(name)) {
+                        var moduleName = 
+                            getConfig('packageName') + '/trackers/' + name;
+                        dependencies.push(moduleName);
+                    }
+                }
 
-                    function forward() {
-                        pendingUnits--;
-                        if (pendingUnits === 0) {
-                            // 刷掉未执行的命令
-                            flushPendingCommands();
+                window.require(
+                    dependencies,
+                    function () {
+                        var pendingUnits = arguments.length;
 
-                            // 之后所有的命令全部直接执行
-                            pendingCommands = {
-                                push: function (command) {
-                                    each(command[0], command[1]);
-                                }
-                            };
+                        function forward() {
+                            pendingUnits--;
+                            if (pendingUnits === 0) {
+                                // 刷掉未执行的命令
+                                flushPendingCommands();
+
+                                // 之后所有的命令全部直接执行
+                                pendingCommands = {
+                                    push: function (command) {
+                                        each(command[0], command[1]);
+                                    }
+                                };
+                            }
+                        }
+
+                        for (var i = 0; i < arguments.length; i++) {
+                            // 用加载过来的追踪器替换现在的`proxy`
+                            var factory = arguments[i];
+                            var config = trackers[factory.name].configuration;
+                            var tracker = factory.create(config);
+                            trackers[factory.name] = tracker;
+                            // 让所有的追踪器能load一下，经典N -> 1的并发模型
+                            tracker.load(forward);
                         }
                     }
+                );
 
-                    for (var i = 0; i < arguments.length; i++) {
-                        // 用加载过来的追踪器替换现在的`proxy`
-                        var tracker = arguments[i];
-                        var config = trackers[tracker.name].configuration;
-                        tracker.initialize(config);
-                        trackers[tracker.name] = tracker;
-                        // 让所有的追踪器能load一下，经典N -> 1的并发模型
-                        tracker.load(forward);
+                var events = require('er/events');
+
+                events.on(
+                    'redirect',
+                    function (e) {
+                        pendingCommands.push(['trackPageView', [e]]);
                     }
-                }
-            );
+                );
+            };
 
-            var events = require('er/events');
-
-            events.on(
-                'redirect',
-                function (e) {
-                    pendingCommands.push(['trackPageView', [e]]);
-                }
-            );
+            return instance;
         };
 
         return exports;

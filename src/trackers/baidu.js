@@ -12,34 +12,34 @@ define(
             window._hmt = [];
         }
 
-        var config = {};
-        
-        return {
-            name: 'baidu',
-            
-            initialize: function (options) {
-                config = options;
-            },
+        var exports = { name: 'baidu' };
 
-            trackPageView: function (context) {
-                var referrer = context.referrer || document.referrer;
-                window._hmt.push(['_setReferrerOverride', referrer]);
-                window._hmt.push(['_trackPageview', context.url]);
+        exports.create = function (config) {
+            return {
+                name: 'baidu',
 
-                return this;
-            },
+                trackPageView: function (context) {
+                    var referrer = context.referrer || document.referrer;
+                    window._hmt.push(['_setReferrerOverride', referrer]);
+                    window._hmt.push(['_trackPageview', context.url]);
 
-            load: function (callback) {
-                if (!config.account) {
-                    return callback();
+                    return this;
+                },
+
+                load: function (callback) {
+                    if (!config.account) {
+                        return callback();
+                    }
+
+                    var url = config.scriptURL || '//hm.baidu.com/hm.js';
+                    url += '?' + config.account;
+
+                    var loadScript = require('../loadScript');
+                    loadScript(url, callback);
                 }
-
-                var url = config.scriptURL || '//hm.baidu.com/hm.js';
-                url += '?' + config.account;
-
-                var loadScript = require('../loadScript');
-                loadScript(url, callback);
-            }
+            };
         };
+
+        return exports;
     }
 );
