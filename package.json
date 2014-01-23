@@ -1,6 +1,6 @@
 {
     "name": "er-track",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "contributors": [
         {
             "name": "otakustay",
@@ -8,7 +8,7 @@
         }
     ],
     "dependencies": {
-        "er": ">=3.0"
+        "er": ">=3.1.0-alpha.5"
     },
     "main": "main",
     "description": "用于ER的页面访问统计套件",
