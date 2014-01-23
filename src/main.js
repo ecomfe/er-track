@@ -142,14 +142,34 @@ define(
                     }
                 );
 
-                var events = require('er/events');
+            };
 
-                events.on(
-                    'redirect',
-                    function (e) {
-                        pendingCommands.push(['trackPageView', [e]]);
-                    }
-                );
+            var events = require('./events');
+
+            function pushCommand() {
+                pendingCommands.push.apply(pendingCommands, arguments);
+            }
+
+            /**
+             * 加入指定事件的跟踪
+             *
+             * @param {string} name 事件名称
+             */
+            instance.include = function (name) {
+                if (events.hasOwnProperty(name)) {
+                    events[name](pushCommand);
+                }
+                return this;
+            };
+
+            /**
+             * 跟踪所有事件
+             */
+            instance.includeAll = function () {
+                for (var name in events) {
+                    instance.include(name);
+                }
+                return this;
             };
 
             return instance;
