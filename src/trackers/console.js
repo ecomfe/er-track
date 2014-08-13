@@ -1,7 +1,7 @@
 /**
  * ER-Track
  * Copyright 2013 Baidu Inc. All rights reserved.
- * 
+ *
  * @file 百度统计追踪器
  * @author otakustay
  */
@@ -25,7 +25,7 @@ define(
             if (!window.console) {
                 return;
             }
-            
+
             if (console.groupCollapsed) {
                 console.groupCollapsed(groupName);
                 for (var i = 1; i < arguments.length; i++) {
@@ -75,13 +75,16 @@ define(
                 },
 
                 trackEnterAction: function (context) {
+                    var model = context.action.model;
+                    var view = context.action.view;
+
                     logWithGroup(
                         '亲你正在进入"' + context.url + '"',
                         ['Action：', context.action],
-                        ['Model：', context.action.model],
-                        ['Model里的数据：', context.action.model.dump()],
-                        ['View：', context.action.view],
-                        ['DOM容器：', context.action.view.getContainerElement()]
+                        ['Model：', model],
+                        ['Model里的数据：', model && model.dump()],
+                        ['View：', view],
+                        ['DOM容器：', view && view.getContainerElement()]
                     );
                 },
 
