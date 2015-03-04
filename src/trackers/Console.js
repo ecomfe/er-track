@@ -84,14 +84,22 @@ define(
          * @override
          */
         exports.trackEnterAction = function (context) {
-            this.display(
+            var entries = [
                 '正在进入' + (context.isChildAction ? '子' : '') + '模块：' + context.url  + ' ' + context.args.title,
-                ['Action：', context.action],
-                ['Model：', context.action.model],
-                ['Model里的数据：', context.action.model.dump()],
-                ['View：', context.action.view],
-                ['DOM容器：', context.action.view.getContainerElement()]
-            );
+                ['Action：', context.action]
+            ];
+
+            if (context.action.model) {
+                entries.push(['Model：', context.action.model]);
+                entries.push(['Model里的数据：', context.action.model.dump()]);
+            }
+
+            if (context.action.view) {
+                entries.push(['View：', context.action.view]);
+                entries.push(['DOM容器：', context.action.view.getContainerElement()]);
+            }
+
+            this.display.apply(this, entries);
         };
 
         /**

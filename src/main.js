@@ -22,31 +22,42 @@ define(
             var excludingCatchers = tracker.catchers && tracker.catchers[1];
 
             // 二者取一
-            var catchersPool;
+            var catchers;
             var tag = 1;
             if (includingCatchers && includingCatchers.length) {
-                catchersPool = includingCatchers;
+                catchers = includingCatchers;
             }
             else {
-                catchersPool = excludingCatchers;
+                catchers = excludingCatchers;
                 tag = -1;
             }
 
-            catchersPool = catchersPool || [];
+            catchers = catchers || [];
 
-            var catchers = this.getCatchersPool().getAllCatchers();
-            for (var name in catchers) {
-                if (catchers.hasOwnProperty(name) && u.indexOf(catchersPool, name) * tag) {
-                    catchers[name](tracker);
+            var catchersPool = this.getCatchersPool();
+            var allCatchers = catchersPool.getAllCatchers();
+
+            u.each(
+                allCatchers,
+                function (catcher, name) {
+                    if (u.indexOf(allCatchers, name) * tag) {
+                        // 不一定出啥未知的错误，还是扔出来吧
+                        try {
+                            allCatchers[name].call(catchersool, tracker);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                    }
                 }
-            }
+            );
         };
 
         /**
          * 启用追踪
          */
         exports.start = function () {
-            u.each(this.getTrackers(), u.partial(this.include), this);
+            u.each(this.getTrackers(), this.include, this);
         };
 
         var eoo = require('eoo');

@@ -25,13 +25,13 @@ define(
          * @public
          */
         exports.promiseReject = function (tracker) {
-            require('er/events').on(
+            this.getEvents().on(
                 'promisereject',
                 bind(tracker.trackPromiseReject, tracker)
             );
 
-            require('promise').onReject(function (reason) {
-                require('er/events').fire('promisereject', {reason: reason, promise: this});
+            this.getPromise().onReject(function (reason) {
+                this.getEvents().fire('promisereject', {reason: reason, promise: this});
             });
         };
 
@@ -41,7 +41,7 @@ define(
          * @public
          */
         exports.deferredException = function (tracker) {
-            require('er/Deferred').on(
+            this.getDeferred().on(
                 'exception',
                 bind(tracker.trackException, tracker)
             );
@@ -62,7 +62,7 @@ define(
          * @public
          */
         exports.requestTimeout = function (tracker) {
-            require('er/ajax').on(
+            this.getAjax().on(
                 'timeout',
                 bind(tracker.trackRequestFail, tracker)
             );
@@ -74,8 +74,6 @@ define(
          * @public
          */
         exports.requestFail = function (tracker) {
-            // TODO 业务系统有时会使用自己的ajax实例，
-            // 这里是否需要也以ioc形式注入？
             this.getAjax().on(
                 'fail',
                 bind(tracker.trackRequestFail, tracker)
@@ -88,7 +86,7 @@ define(
          * @public
          */
         exports.pageView = function (tracker) {
-            require('er/events').on(
+            this.getEvents().on(
                 'redirect',
                 bind(tracker.trackPageView, tracker)
             );
@@ -100,7 +98,7 @@ define(
          * @public
          */
         exports.enterAction = function (tracker) {
-            require('er/events').on(
+            this.getEvents().on(
                 'enteractioncomplete',
                 bind(tracker.trackEnterAction, tracker)
             );
@@ -112,7 +110,7 @@ define(
          * @public
          */
         exports.leaveAction = function (tracker) {
-            require('er/events').on(
+            this.getEvents().on(
                 'leaveaction',
                 bind(tracker.trackLeaveAction, tracker)
             );
@@ -125,18 +123,21 @@ define(
          */
         exports.getAllCatchers = function () {
             return {
-                pageView: u.bind(this.pageView, this),
-                promiseReject: u.bind(this.promiseReject, this),
-                deferredException: u.bind(this.deferredException, this),
-                windowError: u.bind(this.windowError, this),
-                requestTimeout: u.bind(this.requestTimeout, this),
-                requestFail: u.bind(this.requestFail, this),
-                enterAction: u.bind(this.enterAction, this),
-                leaveAction: u.bind(this.leaveAction, this)
+                pageView: this.pageView,
+                promiseReject: this.promiseReject,
+                deferredException: this.deferredException,
+                windowError: this.windowError,
+                requestTimeout: this.requestTimeout,
+                requestFail: this.requestFail,
+                enterAction: this.enterAction,
+                leaveAction: this.leaveAction
             };
         };
 
         var eoo = require('eoo');
+        eoo.defineAccessor(exports, 'events');
+        eoo.defineAccessor(exports, 'promise');
+        eoo.defineAccessor(exports, 'deferred');
         eoo.defineAccessor(exports, 'ajax');
         var CatchersPool = eoo.create(exports);
         return CatchersPool;

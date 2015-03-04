@@ -8,16 +8,15 @@
 define(
     function (require) {
         var u = require('underscore');
-        var moment = require('moment');
 
         var exports = {};
 
         /**
          * @override
          */
-        exports.constructor = function (destinyUrl) {
+        exports.constructor = function (destinationUrl) {
             this.$super(arguments);
-            this.destinyUrl = destinyUrl || 'http://adm.baidu.com/gen_204';
+            this.destinationUrl = destinationUrl || 'http://adm.baidu.com/gen_204';
         };
 
         /**
@@ -25,8 +24,7 @@ define(
          */
         exports.display = function (data) {
             data.url = location.hash.replace(/^#/, '');
-            data.time = moment().format('YYYY-MM-DD HH:mm:ss');
-            // require('er/ajax').log(this.destinyUrl, data);
+            // require('er/ajax').log(this.destinationUrl, data);
         };
 
         /**
@@ -36,7 +34,7 @@ define(
             var referrer = context.referrer || document.referrer;
             var data = {
                 type: 'route',
-                from: referrer === '' ? '二次元' : referrer,
+                from: referrer,
                 to: context.url
             };
             this.display(data);
@@ -53,7 +51,8 @@ define(
             // 异常默认只跟踪代码逻辑错误
             if (context.reason.error instanceof Error) {
                 var error = context.reason.error;
-                data.stack = error.stack;
+                // 太大，暂时不开放
+                // data.stack = error.stack;
                 data.reason = error.message;
             }
             this.display(data);
