@@ -72,6 +72,16 @@ define(
          */
         exports.trackRequestFail = function (context) {};
 
+
+        /**
+         * 追踪通用window异常
+         * @param {string} msg 错误信息
+         * @param {string} url 错误文件路径
+         * @param {string} line 错误行数
+         * @param {string} col 错误列数
+         */
+        exports.trackWindowError = function (msg, url, line, col) {};
+
         var eoo = require('eoo');
         var Terminal = eoo.create(exports);
         return Terminal;

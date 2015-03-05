@@ -25,14 +25,25 @@ define(
          * @public
          */
         exports.promiseReject = function (tracker) {
-            this.getEvents().on(
-                'promisereject',
-                bind(tracker.trackPromiseReject, tracker)
-            );
+            // this.getEvents().on(
+            //     'promisereject',
+            //     bind(tracker.trackPromiseReject, tracker)
+            // );
+            // var handlers = [];
+            // var Promise = this.getPromise();
+            // var onReject = Promise.onReject;
+            // Promise.onReject = function (handler) {
+            //     handlers.push(handler);
+            //     onReject.call(Promise, function () {
+            //         u.each(handlers, function (handler) {
+            //             handler();
+            //         });
+            //     });
+            // };
 
-            this.getPromise().onReject(function (reason) {
-                this.getEvents().fire('promisereject', {reason: reason, promise: this});
-            });
+            // Promise.onReject(bind(tracker.trackPromiseReject, tracker));
+
+            // Events.fire('promisereject', {reason: reason, promise: this});
         };
 
         /**
@@ -53,19 +64,14 @@ define(
          * @public
          */
         exports.windowError = function (tracker) {
-            window.onerror = bind(tracker.trackWindowError, tracker);
-        };
-
-        /**
-         * 绑定超时行为捕捉者
-         * @param {er-track.Termial} tracker 捕捉者实例
-         * @public
-         */
-        exports.requestTimeout = function (tracker) {
-            this.getAjax().on(
-                'timeout',
-                bind(tracker.trackRequestFail, tracker)
-            );
+            window.onerror = (function (onerror) {
+                return function (msg, url, line, row) {
+                    tracker.trackWindowError && tracker.trackWindowError.apply(tracker, arguments);
+                    if (typeof onerror === 'function') {
+                        onerror(msg, url, line, row);
+                    }
+                };
+            }(window.onerror));
         };
 
         /**
@@ -127,7 +133,6 @@ define(
                 promiseReject: this.promiseReject,
                 deferredException: this.deferredException,
                 windowError: this.windowError,
-                requestTimeout: this.requestTimeout,
                 requestFail: this.requestFail,
                 enterAction: this.enterAction,
                 leaveAction: this.leaveAction

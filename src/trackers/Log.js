@@ -14,9 +14,9 @@ define(
         /**
          * @override
          */
-        exports.constructor = function (destinationUrl) {
+        exports.constructor = function (destinationURL) {
             this.$super(arguments);
-            this.destinationUrl = destinationUrl || 'http://adm.baidu.com/gen_204';
+            this.destinationURL = destinationURL || 'http://adm.baidu.com/gen_204';
         };
 
         /**
@@ -24,7 +24,18 @@ define(
          */
         exports.display = function (data) {
             data.url = location.hash.replace(/^#/, '');
-            // require('er/ajax').log(this.destinationUrl, data);
+            // var me = this;
+            // 定义默认的Getter
+            var additionalInfoGetter = this.getPromise().resolve({});
+            // 如果使用者定义了自己的，则使用自定义的
+            if (this.getAdditionalInfoComponent() && this.getAdditionalInfoComponent().getInfo) {
+                additionalInfoGetter = this.getAdditionalInfoComponent().getInfo();
+            }
+            additionalInfoGetter.then(function (info) {
+                data = u.extend(data, info);
+            }).ensure(function () {
+                // e.getAjax().log(me.destinationUrl, data);
+            });
         };
 
         /**
@@ -78,6 +89,9 @@ define(
          * @override
          */
         var eoo = require('eoo');
+        eoo.defineAccessor(exports, 'ajax');
+        eoo.defineAccessor(exports, 'promise');
+        eoo.defineAccessor(exports, 'additionalInfoComponent');
         var Log = eoo.create(require('er-track/trackers/Terminal'), exports);
         return Log;
     }

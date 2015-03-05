@@ -184,11 +184,11 @@ define(
         /**
          * @override
          */
-        exports.trackWindowError = function (sMsg, url, sLine) {
+        exports.trackWindowError = function (msg, url, line, col) {
             this.display(
-                '可能发生语法错误',
-                ['错误位置：' + url],
-                ['错误信息：' + context.to.url]
+                msg,
+                ['错误路径：' + url],
+                ['错误位置：行 ' + line + ' 列 ' + col]
             );
         };
 
