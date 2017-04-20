@@ -14,7 +14,7 @@ define(
 
             // IE的`console.log`不是函数，不支持`apply`，且不支持多个参数
             if (typeof console.log === 'function') {
-                console.log.apply(console, entries);
+                console.log.apply(console, [].concat(entries));
             }
             else {
                 console.log(entries.join(' '));
